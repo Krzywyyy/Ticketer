@@ -71,3 +71,8 @@ C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer.csprojAs
 C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer.csproj.CopyComplete
 C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer.exe
 C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer.pdb
+C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\GUI\MyWindow.baml
+C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\GUI\MyWindow.g.cs
+C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer_MarkupCompile.cache
+C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer.g.resources
+C:\Users\Krzywyyy\source\repos\Ticketer\Ticketer\obj\x64\Debug\Ticketer_Content.g.cs

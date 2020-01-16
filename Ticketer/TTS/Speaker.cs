@@ -1,5 +1,6 @@
 ﻿using Microsoft.Speech.Synthesis;
 using System;
+using System.Threading;
 
 namespace Ticketer.TTS
 {
@@ -13,34 +14,37 @@ namespace Ticketer.TTS
             synthesizer.SetOutputToDefaultAudioDevice();
         }
 
-        public void SystemSpeak(string message)
+        public string SystemSpeak(string message)
         {
-            Console.WriteLine(message);
-            synthesizer.Speak(message);
+            Speak(message);
+            return message;
         }
 
-        public void EmployeeSpeak(string message, string options)
+        public string EmployeeSpeak(string message, string options)
         {
-            Console.WriteLine("Pracownik: " + message + " " + options);
-            synthesizer.Speak(message);
+            Speak(message);
+            return "Pracownik: " + message + " " + options;
         }
 
-        public void CustomerSpeak(string message)
+        public string CustomerSpeak(string message)
         {
-            Console.WriteLine("Ty: " + message);
+            return ("Ty: " + message);
         }
 
         public void AskForRepeat()
         {
-            synthesizer.Speak("Nie do końca zrozumiałam. Czy możesz powtórzyć?");
+            Speak("Nie do końca zrozumiałam. Czy możesz powtórzyć?");
         }
 
         public void SayGoodbye()
         {
-            string goodbyeMessage = "W takim razie dziękuję i zapraszamy ponownie.";
-            Console.WriteLine("Pracownik: " + goodbyeMessage);
-            synthesizer.Speak(goodbyeMessage);
-            Console.Clear();
+            Speak("W takim razie dziękuję i zapraszamy ponownie.");
+        }
+
+        private void Speak(string message)
+        {
+            Thread thread = new Thread(() => synthesizer.Speak(message));
+            thread.Start();
         }
     }
 }

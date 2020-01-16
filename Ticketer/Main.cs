@@ -1,57 +1,152 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Ticketer.ASR;
 using Ticketer.Database.Domain;
 using Ticketer.Database.Repositories;
 using Ticketer.Helpers;
 using Ticketer.TTS;
+using Ticketer.GUI;
+using System.Threading;
+using System;
 
 namespace Ticketer
 {
-    class Main
+    public class Main
     {
         private readonly Speaker speaker = new Speaker();
         private readonly Repository repository = new Repository();
         private Reservation reservation;
         private TicketCounter ticketCounter;
+        private MyWindow window;
+        private List<string> spectacles;
+        private Thread mainConvThread;
+        private Thread waitForStartThread;
 
         public Main()
         {
-            AskForStart();
+            StartApplication();
         }
 
-        private void AskForStart()
+        private void StartApplication()
         {
-            string initMessage = "Powiedz \"Rozpocznij\", aby rozpocząć.";
-            speaker.SystemSpeak(initMessage);
-            InitEngine initEngine = new InitEngine();
-            initEngine.GetAnswer();
-            StartReservation();
+            Thread windowThread = new Thread(new ThreadStart(() => {
+                window = new MyWindow(this);
+                window.Show();
+                System.Windows.Threading.Dispatcher.Run();
+            }));
+            windowThread.SetApartmentState(ApartmentState.STA);
+            windowThread.Start();
+            SetUpInterruptAndEndListener();
+            Thread.Sleep(2500);
+            GetRepetitoires();
+            waitForStartThread = new Thread(AskForStart);
+            waitForStartThread.Start();
         }
 
-        private void StartReservation()
+        public void AskForStart()
         {
-            string welcomeMessage = "Dzień dobry, czy chcesz złożyć zamówienie?";
-            string options = "[TAK/NIE]";
-            speaker.EmployeeSpeak(welcomeMessage, options);
-            YesNoQuestion yesNoQuestion = new YesNoQuestion();
-            string result = yesNoQuestion.GetAnswer();
-            speaker.CustomerSpeak(result);
-            if (result.Equals("Tak"))
+            try
             {
-                AskForSpectacleName();
-            } else
-            {
-                speaker.SayGoodbye();
-                AskForStart();
+                string initMessage = "Powiedz \"Rozpocznij\", aby rozpocząć.";
+                window.AddTextToConversation(speaker.SystemSpeak(initMessage));
+                InitEngine initEngine = new InitEngine();
+                initEngine.GetAnswer();
+                window.EnableStartButton();
+                StartMainConversation();
             }
+            catch (ThreadInterruptedException thr) { }
+        }
+
+        public void StartMainConversation()
+        {
+            if (waitForStartThread.IsAlive)
+            {
+                mainConvThread = new Thread(StartReservation);
+                mainConvThread.Start();
+                window.DisableStartButton();
+                waitForStartThread.Interrupt();          
+            }
+        }
+
+        public void InterruptConversation()
+        {
+            if (mainConvThread.IsAlive)
+            {
+                mainConvThread.Interrupt();
+                speaker.SayGoodbye();
+                waitForStartThread = new Thread(AskForStart);
+                waitForStartThread.Start();
+                window.EnableStartButton();
+                window.HideStopButton();
+            }
+        }
+
+        public void StartReservation()
+        {
+            try
+            {
+                window.ShowStopButton();
+                string welcomeMessage = "Dzień dobry, czy chcesz złożyć zamówienie?";
+                string options = "[TAK/NIE]";
+                window.AddTextToConversation(speaker.EmployeeSpeak(welcomeMessage, options));
+                YesNoQuestion yesNoQuestion = new YesNoQuestion();
+                string result = yesNoQuestion.GetAnswer();
+                window.AddTextToConversation(speaker.CustomerSpeak(result));
+                if (result.Equals("Tak"))
+                {
+                    AskForSpectacleName();
+                }
+                else
+                {
+                    speaker.SayGoodbye();
+                    window.ClearConversation();
+                    AskForStart();
+                }
+            } catch (ThreadInterruptedException thr) { }
+        }
+
+        private void SetUpInterruptAndEndListener()
+        {
+            Thread thread = new Thread(() =>
+            {
+                InterruptAndEndListener listener = new InterruptAndEndListener();
+
+                while (true)
+                {
+                    string interrupt = listener.GetAnswer();
+                    if (interrupt.Equals("Przerwij"))
+                    {
+                        InterruptConversation();
+                    } else if (interrupt.Equals("Zakończ"))
+                    {
+                        Environment.Exit(0);
+                    }
+                }
+            });
+            thread.IsBackground = true;
+           // thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+        }
+
+        private void GetRepetitoires()
+        {
+            Thread thread = new Thread(() =>
+            {
+                spectacles = repository.GetSpectacles();
+                string repetitoire = "Spektakle grane są każdego dnia w godzinach:\n-13:00\n-16:00\n-19:00\n\nAktualnie grane spektakle to:\n";
+                foreach (string spectacle in spectacles)
+                {
+                    repetitoire += "-" + spectacle + "\n";
+                }
+                window.SetRepertoire(repetitoire);
+            });
+            thread.Start();
         }
 
         private void AskForSpectacleName()
         {
             reservation = new Reservation();
             ticketCounter = new TicketCounter();
-            List<string> spectacles = repository.GetSpectacles();
+            
             string spectacleMessage = "Na jaki spektakl chcesz zamówić bilety? ";
             string options = "[";
             foreach(string spectacle in spectacles)
@@ -61,10 +156,10 @@ namespace Ticketer
             spectacleMessage = spectacleMessage.Remove(spectacleMessage.Length - 2, 2);
             options = options.Remove(options.Length - 1, 1);
             options += "]";
-            speaker.EmployeeSpeak(spectacleMessage, options);
+            window.AddTextToConversation(speaker.EmployeeSpeak(spectacleMessage, options));
             SpectacleNameQuestion spectacleNameQuestion = new SpectacleNameQuestion();
             string spectacleName = spectacleNameQuestion.GetAnswer();
-            speaker.CustomerSpeak(spectacleName);
+            window.AddTextToConversation(speaker.CustomerSpeak(spectacleName));
             reservation.Spectacle = repository.FindSpectacleByName(spectacleName);
             AskForDayOfSpectacle();
         }
@@ -73,10 +168,10 @@ namespace Ticketer
         {
             string dateMessage = "Na jaki dzień tygodnia mają być bilety? ";
             string options = "[PONIEDZIAŁEK/WTOREK/ŚRODA/CZWARTEK/PIĄTEK/SOBOTA/NIEDZIELA]";
-            speaker.EmployeeSpeak(dateMessage, options);
+            window.AddTextToConversation(speaker.EmployeeSpeak(dateMessage, options));
             DateQuestion dateQuestion = new DateQuestion();
             string spectacleDate = dateQuestion.GetAnswer();
-            speaker.CustomerSpeak(spectacleDate);
+            window.AddTextToConversation(speaker.CustomerSpeak(spectacleDate));
             reservation.Day = spectacleDate;
             AskForTimeOfSpectacle();
         }
@@ -86,12 +181,12 @@ namespace Ticketer
             string timeMessage = "Na którą godzinę ma być spektakl? ";
             string options = "[13:00/16:00/19:00]";
             string spectaclesTimes = "Dostępne godziny to:\n-13\n-16\n-19";
-            speaker.EmployeeSpeak(timeMessage, options);
-            Console.WriteLine(spectaclesTimes);
+            window.AddTextToConversation(speaker.EmployeeSpeak(timeMessage, options));
+            window.AddTextToConversation(spectaclesTimes);
             TimeQuestion timeQuestion = new TimeQuestion();
             string spectacleTime = timeQuestion.GetAnswer();
-            speaker.CustomerSpeak(spectacleTime);
-            reservation.Time = int.Parse(spectacleTime);
+            window.AddTextToConversation(speaker.CustomerSpeak(spectacleTime));
+            reservation.Time = spectacleTime;
             AskForTickets();
         }
 
@@ -109,17 +204,17 @@ namespace Ticketer
             {
                 ticketTypeMessage += "Poniżej znajduje się cennik biletów.";
                 string priceList = "CENNIK:\n-Dziecięcy (do lat 5) - bezpłatnie\n-Ulgowy - 25 złotych\n-Normalny 50 złotych";
-                speaker.EmployeeSpeak(ticketTypeMessage, options);
-                Console.WriteLine(priceList);
+                window.AddTextToConversation(speaker.EmployeeSpeak(ticketTypeMessage, options));
+                window.AddTextToConversation(priceList);
             } else
             {
-                speaker.EmployeeSpeak(ticketTypeMessage, options);
+                window.AddTextToConversation(speaker.EmployeeSpeak(ticketTypeMessage, options));
             }
             TicketTypeQuestion ticketTypeQuestion = new TicketTypeQuestion();
             string ticketType = ticketTypeQuestion.GetAnswer();
-            speaker.CustomerSpeak(ticketType);
+            window.AddTextToConversation(speaker.CustomerSpeak(ticketType));
             string numberOfTickets = AskForNumberOfTickets();
-            speaker.CustomerSpeak(numberOfTickets);
+            window.AddTextToConversation(speaker.CustomerSpeak(numberOfTickets));
             ticketCounter.AddTickets(ticketType, int.Parse(numberOfTickets));
         }
 
@@ -130,7 +225,7 @@ namespace Ticketer
             {
                 numberOfTicketsMessage += " Jednorazowo można wybrać maksymalnie 9 biletów jednego typu.";
             }
-            speaker.EmployeeSpeak(numberOfTicketsMessage, "");
+            window.AddTextToConversation(speaker.EmployeeSpeak(numberOfTicketsMessage, ""));
             NumberOfTicketsQuestion numberOfTicketsQuestion = new NumberOfTicketsQuestion();
             return numberOfTicketsQuestion.GetAnswer();
         }
@@ -139,10 +234,10 @@ namespace Ticketer
         {
             string moreTicketsMessage = "Czy życzysz sobie jeszcze jakieś bilety?";
             string options = "[TAK/NIE]";
-            speaker.EmployeeSpeak(moreTicketsMessage, options);
+            window.AddTextToConversation(speaker.EmployeeSpeak(moreTicketsMessage, options));
             YesNoQuestion yesNoQuestion = new YesNoQuestion();
             string result = yesNoQuestion.GetAnswer();
-            speaker.CustomerSpeak(result);
+            window.AddTextToConversation(speaker.CustomerSpeak(result));
             if (result.Equals("Tak"))
             {
                 AskForTickets();
@@ -163,8 +258,8 @@ namespace Ticketer
                 + "\nData: " + reservation.Day + ", godz. " + reservation.Time
                 + "\nBilety: " + reservation.Order
                 + "\nŁączny koszt: " + reservation.Price + " złotych";
-            Console.WriteLine(order);
-            speaker.EmployeeSpeak(correctnessMessage, options);
+            window.AddTextToConversation(order);
+            window.AddTextToConversation(speaker.EmployeeSpeak(correctnessMessage, options));
             YesNoQuestion yesNoQuestion = new YesNoQuestion();
             string result = yesNoQuestion.GetAnswer();
             if (result.Equals("Nie"))
@@ -180,7 +275,7 @@ namespace Ticketer
         private void StartReservationAgain()
         {
             string failReservationMessage = "Niestety. W takim razie musimy zacząć zamówienie od początku.";
-            speaker.EmployeeSpeak(failReservationMessage, "");
+            window.AddTextToConversation(speaker.EmployeeSpeak(failReservationMessage, ""));
             reservation = new Reservation();
             AskForSpectacleName();
         }
@@ -188,10 +283,10 @@ namespace Ticketer
         private void AskForCustomerName()
         {
             string customerNameMessage = "W takim razie proszę o imie i nazwisko, na które mam zapisać zamówienie.";
-            speaker.EmployeeSpeak(customerNameMessage, "");
+            window.AddTextToConversation(speaker.EmployeeSpeak(customerNameMessage, ""));
             CustomerNameQuestion customerNameQuestion = new CustomerNameQuestion();
             string customerName = customerNameQuestion.GetAnswer();
-            speaker.CustomerSpeak(customerName);
+            window.AddTextToConversation(speaker.CustomerSpeak(customerName));
             reservation.Client = customerName;
             AskCustomerToConfirmReservation();
         }
@@ -200,7 +295,7 @@ namespace Ticketer
         {
             string confirmationMessage = reservation.Client + " czy zatwierdzasz swoje zamówienie?";
             string options = "[TAK/NIE]";
-            speaker.EmployeeSpeak(confirmationMessage, options);
+            window.AddTextToConversation(speaker.EmployeeSpeak(confirmationMessage, options));
             YesNoQuestion yesNoQuestion = new YesNoQuestion();
             string result = yesNoQuestion.GetAnswer();
             if (result.Equals("Nie"))
@@ -216,7 +311,7 @@ namespace Ticketer
         {
             repository.SaveReservation(reservation);
             string message = "Dziękujemy za złożenie zamówienia. Zapraszamy do kasy najpóźniej 30 minut przed spektaklem w celu opłacenia zamówienia. Pozdrawiam i zapraszam ponownie";
-            speaker.EmployeeSpeak(message, "");
+            window.AddTextToConversation(speaker.EmployeeSpeak(message, ""));
             AfterReservation();
         }
 
@@ -224,12 +319,12 @@ namespace Ticketer
         {
             string afterMessage = "Chcesz zakończyć działanie aplikacji czy rozpocząć od nowa?";
             string options = "[ZAKOŃCZ/POWTÓRZ]";
-            speaker.EmployeeSpeak(afterMessage, options);
+            window.AddTextToConversation(speaker.EmployeeSpeak(afterMessage, options));
             AfterReservationQuestion afterReservationQuestion = new AfterReservationQuestion();
             string decision = afterReservationQuestion.GetAnswer();
             if (decision.Equals("Powtórz"))
             {
-                Console.Clear();
+                window.ClearConversation();
                 StartReservation();
             } else
             {
