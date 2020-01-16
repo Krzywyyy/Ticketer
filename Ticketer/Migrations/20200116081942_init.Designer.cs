@@ -10,7 +10,7 @@ using Ticketer.Database.Context;
 namespace Ticketer.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20200109084540_init")]
+    [Migration("20200116081942_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,8 +43,8 @@ namespace Ticketer.Migrations
                     b.Property<int?>("SpectacleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Time")
-                        .HasColumnType("int");
+                    b.Property<string>("Time")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

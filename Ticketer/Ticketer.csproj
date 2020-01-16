@@ -210,9 +210,9 @@
     </Compile>
     <Compile Include="Helpers\TicketCounter.cs" />
     <Compile Include="Main.cs" />
-    <Compile Include="Migrations\20200109084540_init.cs" />
-    <Compile Include="Migrations\20200109084540_init.designer.cs">
-      <DependentUpon>20200109084540_init.cs</DependentUpon>
+    <Compile Include="Migrations\20200116081942_init.cs" />
+    <Compile Include="Migrations\20200116081942_init.designer.cs">
+      <DependentUpon>20200116081942_init.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\DatabaseContextModelSnapshot.cs" />
     <Compile Include="MyProperties\MyCultureInfo.cs" />

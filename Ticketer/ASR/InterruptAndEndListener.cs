@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Ticketer.ASR.Validators;
 using Ticketer.MyProperties;
 
 namespace Ticketer.ASR
@@ -21,7 +22,7 @@ namespace Ticketer.ASR
 
         public override string GetAnswer()
         {
-            return AnswerReceiver.GetAnswer(pSRE);
+            return AnswerReceiver.GetInterruption(pSRE);
         }
 
         protected override void PrepareGrammar(SpeechRecognitionEngine engine)

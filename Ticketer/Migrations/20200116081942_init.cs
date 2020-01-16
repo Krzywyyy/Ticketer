@@ -27,7 +27,7 @@ namespace Ticketer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SpectacleId = table.Column<int>(nullable: true),
                     Day = table.Column<string>(nullable: true),
-                    Time = table.Column<int>(nullable: false),
+                    Time = table.Column<string>(nullable: true),
                     Order = table.Column<string>(nullable: true),
                     Price = table.Column<float>(nullable: false),
                     Client = table.Column<string>(nullable: true)

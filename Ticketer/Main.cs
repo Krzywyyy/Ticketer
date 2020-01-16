@@ -123,7 +123,6 @@ namespace Ticketer
                 }
             });
             thread.IsBackground = true;
-           // thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
         }
 
@@ -137,6 +136,7 @@ namespace Ticketer
                 {
                     repetitoire += "-" + spectacle + "\n";
                 }
+                repetitoire += "\n" + "CENNIK:\n-Dziecięcy (do lat 5) - bezpłatnie\n-Ulgowy - 25 złotych\n-Normalny 50 złotych";
                 window.SetRepertoire(repetitoire);
             });
             thread.Start();
@@ -180,9 +180,7 @@ namespace Ticketer
         {
             string timeMessage = "Na którą godzinę ma być spektakl? ";
             string options = "[13:00/16:00/19:00]";
-            string spectaclesTimes = "Dostępne godziny to:\n-13\n-16\n-19";
             window.AddTextToConversation(speaker.EmployeeSpeak(timeMessage, options));
-            window.AddTextToConversation(spectaclesTimes);
             TimeQuestion timeQuestion = new TimeQuestion();
             string spectacleTime = timeQuestion.GetAnswer();
             window.AddTextToConversation(speaker.CustomerSpeak(spectacleTime));
@@ -200,16 +198,7 @@ namespace Ticketer
         {
             string ticketTypeMessage = "Jaki typ biletów chcesz zamówić?";
             string options = "[DZIECIĘCY/ULGOWY/NORMALNY]";
-            if (ticketCounter.NoTicketsOrdered())
-            {
-                ticketTypeMessage += "Poniżej znajduje się cennik biletów.";
-                string priceList = "CENNIK:\n-Dziecięcy (do lat 5) - bezpłatnie\n-Ulgowy - 25 złotych\n-Normalny 50 złotych";
-                window.AddTextToConversation(speaker.EmployeeSpeak(ticketTypeMessage, options));
-                window.AddTextToConversation(priceList);
-            } else
-            {
-                window.AddTextToConversation(speaker.EmployeeSpeak(ticketTypeMessage, options));
-            }
+            window.AddTextToConversation(speaker.EmployeeSpeak(ticketTypeMessage, options));
             TicketTypeQuestion ticketTypeQuestion = new TicketTypeQuestion();
             string ticketType = ticketTypeQuestion.GetAnswer();
             window.AddTextToConversation(speaker.CustomerSpeak(ticketType));

@@ -41,8 +41,8 @@ namespace Ticketer.Migrations
                     b.Property<int?>("SpectacleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Time")
-                        .HasColumnType("int");
+                    b.Property<string>("Time")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

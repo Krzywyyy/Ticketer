@@ -34,9 +34,9 @@
 
         public string GetOrderedTickets()
         {
-            return "Bilety:\n"
-                + childrenTicketCount + "x Dziecięcy,\n"
-                + reducedTicketCount + "x Ulgowy,\n"
+            return "Bilety:\n "
+                + childrenTicketCount + "x Dziecięcy, \n"
+                + reducedTicketCount + "x Ulgowy, \n"
                 + normalTicketCount + "x Normalny";
         }
 

@@ -14,5 +14,15 @@ namespace Ticketer.ASR
             } while (!RecognitionValidator.CorrectlyRecognized(recognition));
             return recognition.Text;
         }
+
+        public static string GetInterruption(SpeechRecognitionEngine pSRE)
+        {
+            RecognitionResult recognition;
+            do
+            {
+                recognition = pSRE.Recognize();
+            } while (!RecognitionValidator.CorrectlyInterrupted(recognition));
+            return recognition.Text;
+        }
     }
 }

@@ -23,5 +23,24 @@ namespace Ticketer.ASR.Validators
                 }
             }
         }
+
+        public static bool CorrectlyInterrupted(RecognitionResult recognition)
+        {
+            if (recognition == null)
+            {
+                return false;
+            }
+            else
+            {
+                if (recognition.Confidence < 0.90)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
     }
 }

@@ -13,9 +13,9 @@
         <Button Name="startButton" Content="Rozpocznij" HorizontalAlignment="Left" Margin="598,452,0,0" VerticalAlignment="Top" Width="150" FontSize="20" Height="40" Click="startButton_Click"/>
         <Button Content="Zakończ" HorizontalAlignment="Left" Margin="598,503,0,0" VerticalAlignment="Top" Width="150" FontSize="20" Height="40" Click="Button_Click"/>
         <Button Name="stopButton" Content="Przerwij" Visibility="Hidden" HorizontalAlignment="Left" Margin="429,452,0,0" VerticalAlignment="Top" Width="150" FontSize="20" Height="40" Click="stopButton_Click"/>
-        <ScrollViewer HorizontalAlignment="Left" Height="478" Margin="28,65,0,0" VerticalAlignment="Top" Width="380">
-            <TextBlock Name="conversation" TextWrapping="Wrap" Background="Black" Opacity="0.40" Foreground="White"/>
+        <ScrollViewer Name="conversationViewer" HorizontalAlignment="Left" Height="478" Margin="28,65,0,0" VerticalAlignment="Top" Width="380">
+            <TextBlock Name="conversation" TextWrapping="Wrap" Background="Black" Opacity="0.40" Foreground="White" FontWeight="Bold" FontSize="14"/>
         </ScrollViewer>
-        <TextBlock Name="repertoire" HorizontalAlignment="Left" Margin="442,65,0,0" TextWrapping="Wrap"  Background="Black" Foreground="White" Opacity="0.60" VerticalAlignment="Top" Height="157" Width="306"/>
+        <TextBlock Name="repertoire" HorizontalAlignment="Left" Margin="442,65,0,0" TextWrapping="Wrap"  Background="Black" Foreground="White" Opacity="0.60" VerticalAlignment="Top" Height="223" Width="306"/>
     </Grid>
 </Window>

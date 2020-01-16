@@ -25,7 +25,10 @@ namespace Ticketer.GUI
 
         public void AddTextToConversation(string text)
         {
-            Dispatcher.Invoke(() => conversation.Text += text + "\n");
+            Dispatcher.Invoke(() => {
+                conversation.Text += text + "\n";
+                conversationViewer.ScrollToEnd();
+                });
         }
 
         public void ShowStopButton()
